@@ -1,0 +1,15 @@
+description: This file stores settings for Dart & Flutter DevTools.
+documentation: https://docs.flutter.dev/tools/devtools/extensions#configure-extension-enablement-states
+extensions:
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  supabase_flutter: ^2.17.1
+  url_launcher: ^6.2.5
+  qr_flutter: ^4.1.0
+  intl: ^0.18.0
+  fl_chart: ^0.66.0          # for charts
+  shared_preferences: ^2.2.2 # for local storage
+  provider: ^6.0.5          # state management
+  image_picker: ^1.0.5      # for product images
