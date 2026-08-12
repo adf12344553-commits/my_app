@@ -1,6 +1,4 @@
-# Trigger build
 name: beast_shop
-...
 description: The ultimate free AI-powered commerce beast.
 publish_to: 'none'
 version: 1.0.0+1
