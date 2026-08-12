@@ -6,7 +6,6 @@ import 'app_state.dart';
 import 'create_order_screen.dart';
 import 'credit_management_screen.dart';
 import 'pdf_service.dart';
-import 'ai_assistant_screen.dart';
 import 'lead_screen.dart';
 import 'employee_screen.dart';
 import 'rule_screen.dart';
@@ -112,7 +111,6 @@ class _MainScreenState extends State<MainScreen> {
     OrderListScreen(),
     CreditManagementScreen(),
     LeadScreen(),
-    AIAssistantScreen(),
     EmployeeScreen(),
     RuleScreen(),
     ProfileScreen(),
