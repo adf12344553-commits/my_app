@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class AIService {
   // Replace with your Groq or OpenRouter API key
-  static const String apiKey = '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';
+  static const String groqApiKey = '';
   // Use the Groq or OpenRouter endpoint
   static const String apiUrl =
       'https://api.groq.com/openai/v1/chat/completions';
