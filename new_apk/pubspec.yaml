@@ -1,0 +1,33 @@
+name: beast_shop
+description: The ultimate free AI-powered commerce beast.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  provider: ^6.1.1
+  http: ^1.1.0
+  shared_preferences: ^2.2.2
+  image_picker: ^1.0.4
+  flutter_tts: ^3.8.3
+  lottie: ^2.7.0
+  shimmer: ^3.0.0
+  supabase_flutter: ^2.8.0
+  url_launcher: ^6.3.1
+  pdf: ^3.10.7
+  printing: ^5.11.1
+  path_provider: ^2.1.2
+  intl: ^0.18.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
