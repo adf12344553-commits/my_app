@@ -6,6 +6,7 @@ import 'app_state.dart';
 import 'create_order_screen.dart';
 import 'credit_management_screen.dart';
 import 'pdf_service.dart';
+import 'ai_assistant_screen.dart';
 import 'lead_screen.dart';
 import 'employee_screen.dart';
 import 'rule_screen.dart';
@@ -93,7 +94,7 @@ class SplashScreen extends StatelessWidget {
 }
 
 // =============================================================
-// MAIN SCREEN – 9 TABS
+// MAIN SCREEN – 9 TABS (CORRECT ORDER)
 // =============================================================
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -111,6 +112,7 @@ class _MainScreenState extends State<MainScreen> {
     OrderListScreen(),
     CreditManagementScreen(),
     LeadScreen(),
+    AIAssistantScreen(),
     EmployeeScreen(),
     RuleScreen(),
     ProfileScreen(),
@@ -535,7 +537,7 @@ class DashboardScreen extends StatelessWidget {
 }
 
 // =============================================================
-// PRODUCTS SCREEN – (HSN & GST removed from UI)
+// PRODUCTS SCREEN
 // =============================================================
 class ProductsScreen extends StatelessWidget {
   const ProductsScreen({super.key});
@@ -723,7 +725,7 @@ class ProductsScreen extends StatelessWidget {
 }
 
 // =============================================================
-// PRODUCT DETAIL SCREEN – (HSN & GST removed)
+// PRODUCT DETAIL SCREEN
 // =============================================================
 class ProductDetailScreen extends StatelessWidget {
   final Product product;
@@ -828,7 +830,7 @@ class ProductDetailScreen extends StatelessWidget {
 }
 
 // =============================================================
-// ORDER LIST SCREEN – with Delete
+// ORDER LIST SCREEN
 // =============================================================
 class OrderListScreen extends StatelessWidget {
   const OrderListScreen({super.key});

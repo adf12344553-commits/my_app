@@ -1,4 +1,4 @@
-// lib/profile_screen.dart – FULL (Dark color picker)
+// lib/profile_screen.dart – FULL (Logo + Color Picker + Business Info)
 import 'dart:html' as html;
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -26,7 +26,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _logoUrl;
   Uint8List? _logoBytes;
 
-  // 🔥 Dark colors for picker
   final List<Color> _darkColors = [
     Colors.amber.shade900,
     Colors.blue.shade900,
@@ -124,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: const Text('Profile & Settings'),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
-        elevation: 4,
+        elevation: 2,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -205,8 +204,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     const SizedBox(height: 16),
-
-                    // 🔥 Dark Color Picker
                     const Text('Primary Color (Dark / Bold)',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold)),
@@ -219,7 +216,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       }).toList(),
                     ),
                     const SizedBox(height: 24),
-
                     const Text('Business Information',
                         style: TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold)),
