@@ -1,8 +1,8 @@
-// lib/create_order_screen.dart – COMPLETE
+// lib/create_order_screen.dart – FULLY UPDATED (shows stock errors)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'app_state.dart';
-import 'theme_service.dart'; // ✅ ADDED
+import 'theme_service.dart';
 
 class CreateOrderScreen extends StatefulWidget {
   const CreateOrderScreen({super.key});
@@ -61,7 +61,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Product dropdown
                   DropdownButtonFormField<String>(
                     decoration: const InputDecoration(
                       labelText: 'Select Product',
@@ -90,8 +89,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-
-                  // Show product details if selected
                   if (_selectedProductId != null)
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -121,6 +118,24 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              const Text('Stock Available:',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              Text(
+                                '${selectedProduct.stock} units',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: selectedProduct.stock > 0
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
                               const Text('GST Rate:',
                                   style:
                                       TextStyle(fontWeight: FontWeight.bold)),
@@ -133,27 +148,10 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                               ),
                             ],
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text('HSN Code:',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                              Text(
-                                selectedProduct.hsnCode,
-                                style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey[700]),
-                              ),
-                            ],
-                          ),
                         ],
                       ),
                     ),
                   const SizedBox(height: 16),
-
-                  // Customer dropdown
                   DropdownButtonFormField<String>(
                     decoration: const InputDecoration(
                       labelText: 'Customer',
@@ -183,8 +181,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                     },
                   ),
                   const SizedBox(height: 12),
-
-                  // Customer GST
                   TextField(
                     controller: _customerGstController,
                     decoration: const InputDecoration(
@@ -195,8 +191,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Payment method
                   DropdownButtonFormField<String>(
                     decoration: const InputDecoration(
                       labelText: 'Payment Method',
@@ -213,8 +207,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-
-                  // Quantity
                   Row(
                     children: [
                       const Text('Quantity:', style: TextStyle(fontSize: 16)),
@@ -256,8 +248,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                     ],
                   ),
                   const SizedBox(height: 24),
-
-                  // Create Order Button
                   SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -283,18 +273,21 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                   Navigator.pop(context);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                        content:
-                                            Text('Order created successfully!'),
-                                        backgroundColor: Colors.green),
+                                      content:
+                                          Text('✅ Order created successfully!'),
+                                      backgroundColor: Colors.green,
+                                    ),
                                   );
                                 }
                               } catch (e) {
                                 if (mounted) {
+                                  // 🔥 Show the actual error message (e.g., "Insufficient stock")
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                        content: Text('❌ Error: $e'),
-                                        backgroundColor: Colors.red,
-                                        duration: const Duration(seconds: 4)),
+                                      content: Text('❌ ${e.toString()}'),
+                                      backgroundColor: Colors.red,
+                                      duration: const Duration(seconds: 5),
+                                    ),
                                   );
                                 }
                               }
@@ -357,21 +350,24 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                   if (mounted) Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                        content: Text('Customer added!'),
-                        backgroundColor: Colors.green),
+                      content: Text('✅ Customer added!'),
+                      backgroundColor: Colors.green,
+                    ),
                   );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text('❌ Error: $e'),
-                        backgroundColor: Colors.red),
+                      content: Text('❌ Error: $e'),
+                      backgroundColor: Colors.red,
+                    ),
                   );
                 }
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                      content: Text('Please enter a name'),
-                      backgroundColor: Colors.red),
+                    content: Text('Please enter a name'),
+                    backgroundColor: Colors.red,
+                  ),
                 );
               }
             },

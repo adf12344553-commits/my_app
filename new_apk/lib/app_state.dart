@@ -1,12 +1,13 @@
-// lib/app_state.dart – FULL with all CRUD (Products, Orders, Debtors, Customers, Leads, Employees, Rules, Settings)
+// lib/app_state.dart – FULLY UPDATED (with negative stock prevention, stock restore, and error handling)
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_provider.dart';
 import 'business_service.dart';
 
 // ============================================================
-// 1. CUSTOMER
+// MODELS (unchanged)
 // ============================================================
+
 class Customer {
   final String id;
   final String businessId;
@@ -51,9 +52,6 @@ class Customer {
       );
 }
 
-// ============================================================
-// 2. PRODUCT
-// ============================================================
 class Product {
   final String id;
   final String name;
@@ -106,9 +104,6 @@ class Product {
       );
 }
 
-// ============================================================
-// 3. ORDER
-// ============================================================
 class Order {
   final String id;
   final String productName;
@@ -172,9 +167,6 @@ class Order {
       );
 }
 
-// ============================================================
-// 4. DEBTOR
-// ============================================================
 class Debtor {
   final String id;
   final String name;
@@ -215,9 +207,6 @@ class Debtor {
       );
 }
 
-// ============================================================
-// 5. BUSINESS SETTINGS
-// ============================================================
 class BusinessSettings {
   final String id;
   final String userId;
@@ -267,9 +256,6 @@ class BusinessSettings {
       );
 }
 
-// ============================================================
-// 6. LEAD
-// ============================================================
 class Lead {
   final String id;
   final String businessId;
@@ -344,9 +330,6 @@ class Lead {
       );
 }
 
-// ============================================================
-// 7. EMPLOYEE
-// ============================================================
 class Employee {
   final String id;
   final String businessId;
@@ -395,9 +378,6 @@ class Employee {
       );
 }
 
-// ============================================================
-// 8. RULE
-// ============================================================
 class Rule {
   final String id;
   final String businessId;
@@ -447,7 +427,7 @@ class Rule {
 }
 
 // ============================================================
-// 9. APP STATE – FULL
+// APP STATE – FULLY UPDATED
 // ============================================================
 class AppState extends ChangeNotifier {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -514,9 +494,6 @@ class AppState extends ChangeNotifier {
       _clearData();
   }
 
-  // ============================================================
-  // INITIALIZE
-  // ============================================================
   Future<void> initialize() async {
     if (_initializing || _isInitialized || !_auth.isLoggedIn) return;
     _initializing = true;
@@ -606,7 +583,6 @@ class AppState extends ChangeNotifier {
     try {
       final now = DateTime.now();
 
-      // Products
       final productList = [
         {
           'name': 'Premium Basmati Rice (50kg)',
@@ -670,7 +646,6 @@ class AppState extends ChangeNotifier {
         });
       }
 
-      // Debtors
       final debtorList = [
         {
           'name': 'Rajesh Traders',
@@ -730,7 +705,6 @@ class AppState extends ChangeNotifier {
         });
       }
 
-      // Leads
       final leadList = [
         {
           'name': 'Mohan Steel Traders',
@@ -793,7 +767,6 @@ class AppState extends ChangeNotifier {
         });
       }
 
-      // Employees
       final employeeList = [
         {
           'name': 'Rahul Sharma',
@@ -827,7 +800,6 @@ class AppState extends ChangeNotifier {
         });
       }
 
-      // Rules
       final ruleList = [
         {
           'name': 'Overdue Invoice Reminder',
@@ -862,7 +834,6 @@ class AppState extends ChangeNotifier {
         });
       }
 
-      // Create employee for current user if not exists
       final user = _auth.user;
       if (user != null) {
         final existing = await _supabase
@@ -945,7 +916,7 @@ class AppState extends ChangeNotifier {
   }
 
   // ============================================================
-  // PRODUCTS (with error handling)
+  // PRODUCTS
   // ============================================================
   Future<void> loadProducts() async {
     if (_businessId == null) return;
@@ -963,13 +934,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> addProduct(Product product) async {
-    if (_businessId == null) {
-      debugPrint('❌ addProduct: businessId is null!');
-      throw Exception(
-          'Business not initialized. Please create a business first.');
-    }
+    if (_businessId == null) throw Exception('Business not initialized.');
     try {
-      debugPrint('📝 Adding product: ${product.name}');
       await _supabase.from('products').insert({
         'business_id': _businessId!,
         'name': product.name,
@@ -981,10 +947,9 @@ class AppState extends ChangeNotifier {
         'hsn_code': product.hsnCode ?? '9980',
         'gst_rate': product.gstRate ?? 18.0,
       });
-      debugPrint('✅ Product added: ${product.name}');
       await loadProducts();
     } catch (e) {
-      debugPrint('❌ addProduct ERROR: $e');
+      debugPrint('❌ addProduct error: $e');
       rethrow;
     }
   }
@@ -1004,7 +969,7 @@ class AppState extends ChangeNotifier {
   }
 
   // ============================================================
-  // ORDERS
+  // 🔥 ORDERS – WITH NEGATIVE STOCK PREVENTION
   // ============================================================
   Future<void> loadOrders() async {
     if (_businessId == null) return;
@@ -1020,6 +985,7 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // 🔥🔥 UPDATED: Prevents negative stock
   Future<void> addOrder({
     required String productId,
     required String customerName,
@@ -1028,8 +994,18 @@ class AppState extends ChangeNotifier {
     required int quantity,
   }) async {
     if (_businessId == null) throw Exception('Business not initialized.');
+
     try {
+      // Load the latest product data (to ensure we have current stock)
+      await loadProducts();
       final product = _products.firstWhere((p) => p.id == productId);
+
+      // 🔥🔥 CHECK: Is there enough stock?
+      if (product.stock < quantity) {
+        throw Exception(
+            '❌ Insufficient stock. Only ${product.stock} units available.');
+      }
+
       final taxable = product.price * quantity;
       final cgst = taxable * (product.gstRate / 200);
       final sgst = taxable * (product.gstRate / 200);
@@ -1063,12 +1039,16 @@ class AppState extends ChangeNotifier {
         'total': taxable,
       });
 
+      // 🔥 Deduct stock (only after confirming stock > quantity)
+      final newStock = product.stock - quantity;
       await _supabase
           .from('products')
-          .update({'stock': product.stock - quantity})
+          .update({'stock': newStock})
           .eq('id', productId)
           .eq('business_id', _businessId!);
 
+      // Reload products to update the UI
+      await loadProducts();
       await loadOrders();
       await checkRulesForTrigger('order_created',
           context: {'order': orderData});
@@ -1078,14 +1058,32 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // 🔥 NEW: Delete Order with Stock Restore
   Future<void> deleteOrder(String id) async {
     if (_businessId == null) return;
     try {
+      // Get the order details first (so we know what stock to restore)
+      final order = _orders.firstWhere((o) => o.id == id);
+
+      // Find the product
+      await loadProducts();
+      final product = _products.firstWhere((p) => p.name == order.productName);
+
+      // Restore stock
+      await _supabase
+          .from('products')
+          .update({'stock': product.stock + order.quantity})
+          .eq('id', product.id)
+          .eq('business_id', _businessId!);
+
+      // Delete the order
       await _supabase
           .from('orders')
           .delete()
           .eq('id', id)
           .eq('business_id', _businessId!);
+
+      await loadProducts();
       await loadOrders();
     } catch (e) {
       debugPrint('❌ deleteOrder error: $e');
