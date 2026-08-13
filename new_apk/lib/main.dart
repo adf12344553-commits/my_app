@@ -94,7 +94,7 @@ class SplashScreen extends StatelessWidget {
 }
 
 // =============================================================
-// MAIN SCREEN – 9 TABS (CORRECT ORDER)
+// MAIN SCREEN – CORRECT ORDER (9 TABS)
 // =============================================================
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -107,15 +107,15 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _screens = const [
-    DashboardScreen(),
-    ProductsScreen(),
-    OrderListScreen(),
-    CreditManagementScreen(),
-    LeadScreen(),
-    AIAssistantScreen(),
-    EmployeeScreen(),
-    RuleScreen(),
-    ProfileScreen(),
+    DashboardScreen(), // 0: Home
+    ProductsScreen(), // 1: Products
+    OrderListScreen(), // 2: Orders
+    CreditManagementScreen(), // 3: Udhār
+    LeadScreen(), // 4: Leads
+    AIAssistantScreen(), // 5: AI
+    EmployeeScreen(), // 6: Staff
+    RuleScreen(), // 7: Rules
+    ProfileScreen(), // 8: Profile
   ];
 
   @override
@@ -156,212 +156,6 @@ class _MainScreenState extends State<MainScreen> {
         elevation: 0,
       ),
     );
-  }
-}
-
-// =============================================================
-// BUSINESS SETUP SCREEN
-// =============================================================
-class BusinessSetupScreen extends StatefulWidget {
-  const BusinessSetupScreen({super.key});
-
-  @override
-  State<BusinessSetupScreen> createState() => _BusinessSetupScreenState();
-}
-
-class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _ownerController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _upiController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
-  bool _isLoading = false;
-  String? _errorMessage;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Setup Your Business'),
-        backgroundColor: Colors.amber.shade800,
-        foregroundColor: Colors.white,
-        elevation: 2,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Icon(Icons.storefront, size: 64, color: Colors.amber),
-              const SizedBox(height: 16),
-              const Text(
-                'Welcome to BusinessOS!',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Please set up your business profile to continue.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-              const SizedBox(height: 32),
-              if (_errorMessage != null)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.red[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red),
-                  ),
-                  child: Text(
-                    '❌ $_errorMessage',
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Business Name *',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12))),
-                  prefixIcon: Icon(Icons.store),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _ownerController,
-                decoration: const InputDecoration(
-                  labelText: 'Owner Name *',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12))),
-                  prefixIcon: Icon(Icons.person),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12))),
-                  prefixIcon: Icon(Icons.phone),
-                ),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _upiController,
-                decoration: const InputDecoration(
-                  labelText: 'UPI ID (e.g., business@upi)',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12))),
-                  prefixIcon: Icon(Icons.payments),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _addressController,
-                decoration: const InputDecoration(
-                  labelText: 'Address',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12))),
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : ElevatedButton(
-                        onPressed: _saveBusiness,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.amber.shade800,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: const Text(
-                          'CREATE BUSINESS',
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1),
-                        ),
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _saveBusiness() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    final appState = context.read<AppState>();
-    final auth = context.read<AuthProvider>();
-
-    try {
-      final name = _nameController.text.trim();
-      final ownerName = _ownerController.text.trim();
-
-      if (name.isEmpty || ownerName.isEmpty) {
-        setState(() {
-          _errorMessage = 'Business Name and Owner Name are required';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      debugPrint('📝 Creating business: $name');
-      final business = await appState.businessService.createBusiness(
-        name: name,
-        ownerName: ownerName,
-        phone: _phoneController.text.trim(),
-        email: auth.user?.email,
-        address: _addressController.text.trim(),
-        upiId: _upiController.text.trim(),
-      );
-
-      if (business != null) {
-        debugPrint('✅ Business created: ${business['id']}');
-        await appState.initialize();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Business created successfully!'),
-                backgroundColor: Colors.green),
-          );
-          Navigator.pop(context);
-        }
-      } else {
-        setState(() {
-          _errorMessage = 'Failed to create business. Check terminal logs.';
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('❌ Business creation error: $e');
-      setState(() {
-        _errorMessage = 'Error: $e';
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('❌ Error: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5)),
-      );
-    }
-    if (mounted) setState(() => _isLoading = false);
   }
 }
 
