@@ -1,11 +1,15 @@
-// lib/app_state.dart – COMPLETE FIXED (Products Delete, Orders Delete, ALL WORKING)
+// lib/app_state.dart – COMPLETE FIXED
+// ✅ Product Delete: Checks for orders first
+// ✅ Order Delete: Restores stock using order_items product_id
+// All CRUD operations intact
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_provider.dart';
 import 'business_service.dart';
 
 // ============================================================
-// MODELS (ALL UNCHANGED – KEEP AS IS)
+// MODELS (ALL UNCHANGED)
 // ============================================================
 
 class Customer {
@@ -427,7 +431,7 @@ class Rule {
 }
 
 // ============================================================
-// 9. APP STATE – FULL & COMPLETE
+// APP STATE – FULL & COMPLETE WITH FIXED DELETE METHODS
 // ============================================================
 class AppState extends ChangeNotifier {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -919,7 +923,7 @@ class AppState extends ChangeNotifier {
   }
 
   // ============================================================
-  // PRODUCTS – FULL CRUD (DELETE WORKING)
+  // PRODUCTS – FULL CRUD (FIXED DELETE)
   // ============================================================
   Future<void> loadProducts() async {
     if (_businessId == null) return;
@@ -957,7 +961,6 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // 🔥 FIXED: Update Product
   Future<void> updateProduct(Product product) async {
     if (_businessId == null) return;
     try {
@@ -982,7 +985,7 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // 🔥 FIXED: Delete Product (WORKING)
+  // 🔥 FIXED: Delete Product – Check for orders first
   Future<void> deleteProduct(String id) async {
     if (_businessId == null) {
       debugPrint('❌ deleteProduct: businessId is null!');
@@ -990,6 +993,20 @@ class AppState extends ChangeNotifier {
     }
     try {
       debugPrint('🗑️ Deleting product with ID: $id');
+
+      // 1. Check if product has order_items
+      final orderItems = await _supabase
+          .from('order_items')
+          .select('id')
+          .eq('product_id', id)
+          .limit(1);
+
+      if (orderItems.isNotEmpty) {
+        throw Exception(
+            '❌ Cannot delete: This product has existing orders.\nPlease delete the orders first, or sell remaining stock.');
+      }
+
+      // 2. If no orders, delete product
       await _supabase
           .from('products')
           .delete()
@@ -1004,7 +1021,7 @@ class AppState extends ChangeNotifier {
   }
 
   // ============================================================
-  // ORDERS – FULL CRUD (DELETE WORKING)
+  // ORDERS – FULL CRUD (FIXED DELETE)
   // ============================================================
   Future<void> loadOrders() async {
     if (_businessId == null) return;
@@ -1087,7 +1104,7 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  // 🔥 FIXED: Delete Order with Stock Restore (WORKING)
+  // 🔥 FIXED: Delete Order – Restore stock using order_items product_id
   Future<void> deleteOrder(String id) async {
     if (_businessId == null) {
       debugPrint('❌ deleteOrder: businessId is null!');
@@ -1096,23 +1113,53 @@ class AppState extends ChangeNotifier {
     try {
       debugPrint('🗑️ Deleting order with ID: $id');
 
-      // 1. Get the order details
-      final order = _orders.firstWhere((o) => o.id == id);
-      debugPrint('📦 Order found: ${order.productName} x${order.quantity}');
+      // 1. Get order items
+      final orderItems = await _supabase
+          .from('order_items')
+          .select('product_id, quantity')
+          .eq('order_id', id);
 
-      // 2. Find the product
-      await loadProducts();
-      final product = _products.firstWhere((p) => p.name == order.productName);
-      debugPrint(
-          '📦 Product found: ${product.name}, current stock: ${product.stock}');
+      if (orderItems.isEmpty) {
+        debugPrint('⚠️ No items found for this order, deleting anyway');
+        await _supabase
+            .from('orders')
+            .delete()
+            .eq('id', id)
+            .eq('business_id', _businessId!);
+        await loadOrders();
+        return;
+      }
 
-      // 3. Restore stock
-      await _supabase
-          .from('products')
-          .update({'stock': product.stock + order.quantity})
-          .eq('id', product.id)
-          .eq('business_id', _businessId!);
-      debugPrint('✅ Stock restored to: ${product.stock + order.quantity}');
+      // 2. Restore stock for each item
+      for (var item in orderItems) {
+        final productId = item['product_id'] as String;
+        final quantity = item['quantity'] as int;
+
+        // Get current product stock
+        final productResponse = await _supabase
+            .from('products')
+            .select('stock')
+            .eq('id', productId)
+            .eq('business_id', _businessId!)
+            .maybeSingle();
+
+        if (productResponse != null) {
+          final currentStock = productResponse['stock'] as int? ?? 0;
+          await _supabase
+              .from('products')
+              .update({'stock': currentStock + quantity})
+              .eq('id', productId)
+              .eq('business_id', _businessId!);
+          debugPrint(
+              '✅ Stock restored for product ID: $productId (+$quantity)');
+        } else {
+          debugPrint(
+              '⚠️ Product not found for ID: $productId, skipping stock restore');
+        }
+      }
+
+      // 3. Delete order items
+      await _supabase.from('order_items').delete().eq('order_id', id);
 
       // 4. Delete the order
       await _supabase
