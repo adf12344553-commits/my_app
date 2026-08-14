@@ -1,4 +1,4 @@
-// lib/create_order_screen.dart – FULLY UPDATED (shows stock errors)
+// lib/create_order_screen.dart – FULLY UPDATED
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'app_state.dart';
@@ -281,7 +281,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen> {
                                 }
                               } catch (e) {
                                 if (mounted) {
-                                  // 🔥 Show the actual error message (e.g., "Insufficient stock")
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text('❌ ${e.toString()}'),

@@ -1,12 +1,15 @@
-// lib/profile_screen.dart – FULL (Logo + Color Picker + Business Info)
+// lib/profile_screen.dart – with Dark Mode Toggle
+
 import 'dart:html' as html;
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'app_state.dart';
 import 'auth_provider.dart';
 import 'theme_service.dart';
 import 'login_screen.dart';
+import 'theme_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -25,6 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isLoading = false;
   String? _logoUrl;
   Uint8List? _logoBytes;
+  bool _isDarkMode = true;
 
   final List<Color> _darkColors = [
     Colors.amber.shade900,
@@ -45,6 +49,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _loadSettings();
+    _loadThemePreference();
   }
 
   void _loadSettings() {
@@ -58,6 +63,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _logoUrl = settings.logoUrl;
       _selectedColor = ThemeService.getPrimaryColor(context.read<AppState>());
     }
+  }
+
+  Future<void> _loadThemePreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkMode = prefs.getBool('isDarkMode') ?? true;
+    });
+  }
+
+  Future<void> _toggleTheme(bool value) async {
+    setState(() {
+      _isDarkMode = value;
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkMode', value);
+    final themeProvider = context.read<ThemeProvider>();
+    themeProvider.setDark(value);
   }
 
   Future<void> _uploadLogo() async {
@@ -117,6 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final auth = context.watch<AuthProvider>();
     final appState = context.watch<AppState>();
     final primaryColor = ThemeService.getPrimaryColor(appState);
+    final isDark = context.watch<ThemeProvider>().isDark;
 
     return Scaffold(
       appBar: AppBar(
@@ -145,6 +168,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Theme Toggle
+                    Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      child: SwitchListTile(
+                        title: const Text('Dark Mode'),
+                        subtitle: Text(isDark
+                            ? 'Dark theme enabled'
+                            : 'Light theme enabled'),
+                        value: isDark,
+                        onChanged: _toggleTheme,
+                        secondary: Icon(
+                          isDark ? Icons.nightlight_round : Icons.light_mode,
+                          color: isDark ? Colors.amber : Colors.orange,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
                     const Text('Branding',
                         style: TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold)),
